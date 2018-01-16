@@ -1,6 +1,7 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
+import socket
 
 # get Google Drive API with credentials
 scope = ['https://spreadsheets.google.com/feeds']
@@ -70,8 +71,12 @@ def timestamp(worksheet):
 # loop to keep script running
 def loop():
     # get input from arduino part
-    debuginput = input()
-    index = debuginput
+	data = s.recv(1024)
+	
+	# format of recieved data? 
+	parseddata = data
+    
+    index = parseddata
 
     # get informations
     worksheet = sheet.get_worksheet(0)
@@ -93,5 +98,7 @@ def loop():
 # main
 if __name__ == '__main__':
     sheet = client.open('Zeiterfassung Tueftelpark')
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.connect(('127.0.0.1', 5700))
     while True:
         loop()
