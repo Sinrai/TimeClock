@@ -2,10 +2,13 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 import socket
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecurePlatformWarning)
+urllib3.disable_warnings(urllib3.exceptions.SNIMissingWarning)
 
 # get Google Drive API with credentials
 scope = ['https://spreadsheets.google.com/feeds']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('timeclockapi.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name('timeclock/timeclockapi.json', scope)
 client = gspread.authorize(credentials)
 
 ########################################################################################################################
@@ -71,12 +74,11 @@ def timestamp(worksheet):
 # loop to keep script running
 def loop():
     # get input from arduino part
-	data = s.recv(1024)
-	
-	# format of recieved data? 
-	parseddata = data
+    data = s.recv(1024)
+    print(data)
+    exit()
     
-    index = parseddata
+    index = 0
 
     # get informations
     worksheet = sheet.get_worksheet(0)
@@ -98,7 +100,7 @@ def loop():
 # main
 if __name__ == '__main__':
     sheet = client.open('Zeiterfassung Tueftelpark')
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect(('127.0.0.1', 5700))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('127.0.0.1', 5700))
     while True:
         loop()
