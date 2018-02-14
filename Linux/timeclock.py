@@ -76,9 +76,8 @@ def loop():
     # get input from arduino part
     data = s.recv(1024)
     print(data)
-    exit()
-    
-    index = 0
+    exit()  # debug
+    index = int(data, 2)
 
     # get informations
     worksheet = sheet.get_worksheet(0)
