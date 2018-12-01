@@ -3,12 +3,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 import socket
 import urllib3
+import json
 urllib3.disable_warnings(urllib3.exceptions.InsecurePlatformWarning)
 urllib3.disable_warnings(urllib3.exceptions.SNIMissingWarning)
 
 # get Google Drive API with credentials
 scope = ['https://spreadsheets.google.com/feeds']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('timeclock/timeclockapi.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name('timeclockapi.json', scope)
 client = gspread.authorize(credentials)
 
 ########################################################################################################################
@@ -16,16 +17,21 @@ client = gspread.authorize(credentials)
 # add new participant to worksheet #0
 def new_participant(sheetid, index):
     worksheet = sheet.get_worksheet(0)
-    worksheet.update_cell(sheetid + 1, 1, sheetid)
-    worksheet.update_cell(sheetid + 1, 2, index)
-    worksheet.update_cell(sheetid + 1, 5, '=Sum(%i!D$3:D)' % index)
+    names = worksheet.range('D2:D257')
+    for i in range(256):
+        if names[i].value == '':
+            pos = i+2
+            break
+    worksheet.update_cell(pos, 1, sheetid)
+    worksheet.update_cell(pos, 2, index)
+    worksheet.update_cell(pos, 3, '=Sum(%i!D$3:D)' % index)
 
 # add new worksheet
 def new_worksheet(index):
     worksheet = sheet.add_worksheet(str(index), 2, 4)
     sheetid = len(sheet.worksheets())-1
-    worksheet.update_cell(1, 1, "='Uebersicht'!C%i" % (sheetid+1))
-    worksheet.update_cell(1, 2, "='Uebersicht'!D%i" % (sheetid+1))
+    worksheet.update_cell(1, 1, "=VLOOKUP(%i; Uebersicht!B:D; 3; FALSE)" % sheetid)
+    worksheet.update_cell(1, 2, "=VLOOKUP(%i; Uebersicht!B:E; 4; FALSE)" % sheetid)
     worksheet.update_cell(2, 1, 'Datum')
     worksheet.update_cell(2, 2, 'Ein')
     worksheet.update_cell(2, 3, 'Aus')
@@ -74,9 +80,7 @@ def timestamp(worksheet):
 # loop to keep script running
 def loop():
     # get input from arduino part
-    data = s.recv(1024)
-    print(data)
-    exit()  # debug
+    data = json.loads(s.recv(1024))['data']
     index = int(data, 2)
 
     # get informations
